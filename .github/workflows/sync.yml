@@ -1,0 +1,41 @@
+name: Sync Newsletters
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run sync
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          GITHUB_OWNER: ${{ secrets.GITHUB_OWNER }}
+          GITHUB_REPO: ${{ secrets.GITHUB_REPO }}
+          SENDY_API_URL: ${{ secrets.SENDY_API_URL }}
+          SENDY_API_KEY: ${{ secrets.SENDY_API_KEY }}
+          SENDY_BRAND_ID: ${{ secrets.SENDY_BRAND_ID }}
+          SENDY_FROM_NAME: ${{ secrets.SENDY_FROM_NAME }}
+          SENDY_FROM_EMAIL: ${{ secrets.SENDY_FROM_EMAIL }}
+          SENDY_REPLY_TO: ${{ secrets.SENDY_REPLY_TO }}
+          SENDY_LIST_PRINCIPAL: ${{ secrets.SENDY_LIST_PRINCIPAL }}
+          SENDY_LIST_PRO: ${{ secrets.SENDY_LIST_PRO }}
+          SENDY_LIST_EMPRESARIOS: ${{ secrets.SENDY_LIST_EMPRESARIOS }}
+          BLOG_BASE_URL: ${{ secrets.BLOG_BASE_URL }}
+        run: npm run sync
