@@ -13,9 +13,9 @@ const CONFIG = {
     databaseId: process.env.NOTION_DATABASE_ID,
   },
   github: {
-    token: process.env.GITHUB_TOKEN,
-    owner: process.env.GITHUB_OWNER,
-    repo: process.env.GITHUB_REPO,
+    token: process.env.GH_PAT,
+    owner: process.env.GH_OWNER,
+    repo: process.env.GH_REPO,
     branch: 'main',
   },
   sendy: {
@@ -33,8 +33,7 @@ const CONFIG = {
 
 const SENDY_LISTS = {
   'Principal': process.env.SENDY_LIST_PRINCIPAL,
-  'Pro': process.env.SENDY_LIST_PRO,
-  'Empresarios': process.env.SENDY_LIST_EMPRESARIOS,
+  'Test': process.env.SENDY_LIST_TEST,
 };
 
 // ============================================
