@@ -307,7 +307,7 @@ ${bodyHtml}
  * Crea archivo Markdown con frontmatter para Astro
  */
 function createMarkdownFile(data) {
-  const { titulo, markdownContent, descripcion, fecha, lista, campaignId } = data;
+  const { titulo, markdownContent, descripcion, fecha, lista } = data;
 
   const frontmatter = [
     '---',
@@ -315,13 +315,8 @@ function createMarkdownFile(data) {
     `pubDate: ${new Date(fecha).toISOString()}`,
     `description: "${descripcion}"`,
     `sentToList: "${lista}"`,
+    '---',
   ];
-
-  if (campaignId) {
-    frontmatter.push(`campaignId: "${campaignId}"`);
-  }
-
-  frontmatter.push('---');
 
   return frontmatter.join('\n') + '\n\n' + markdownContent + '\n';
 }
@@ -422,11 +417,6 @@ async function updateNotionPage(pageId, updates) {
     if (updates.hasOwnProperty('enviarAhora')) {
       properties['Enviar ahora'] = { checkbox: updates.enviarAhora };
     }
-    if (updates.campaignId) {
-      properties['Campaign ID'] = {
-        rich_text: [{ text: { content: updates.campaignId } }],
-      };
-    }
     if (updates.urlBlog) {
       properties['URL Blog'] = { url: updates.urlBlog };
     }
@@ -478,16 +468,20 @@ async function procesarNewsletters() {
         // Extraer propiedades
         const props = page.properties;
         const titulo = props['Título']?.title?.[0]?.plain_text || 'Sin título';
-        const lista = props['Lista Sendy']?.select?.name || 'Principal';
-        const fecha = props['Fecha Publicación']?.date?.start || new Date().toISOString();
+        const listas = props['Lista Sendy']?.multi_select?.map(s => s.name) || ['Principal'];
+        const fecha = new Date().toISOString();
 
-        // Validar lista
-        if (!SENDY_LISTS[lista]) {
-          throw new Error(`Lista "${lista}" no configurada en SENDY_LISTS`);
+        // Validar listas
+        for (const lista of listas) {
+          if (!SENDY_LISTS[lista]) {
+            throw new Error(`Lista "${lista}" no configurada en SENDY_LISTS`);
+          }
         }
 
+        const listaIds = listas.map(l => SENDY_LISTS[l]).join(',');
+
         console.log(`📄 Procesando: "${titulo}"`);
-        console.log(`   Lista: ${lista}`);
+        console.log(`   Listas: ${listas.join(', ')}`);
         console.log(`   Fecha: ${fecha}`);
 
         // 3. Leer contenido de los bloques de la página
@@ -515,7 +509,7 @@ async function procesarNewsletters() {
         const sendyResult = await sendToSendy({
           subject: titulo,
           htmlContent: emailHtml,
-          listaId: SENDY_LISTS[lista],
+          listaId: listaIds,
         });
 
         if (!sendyResult.success) {
@@ -531,8 +525,7 @@ async function procesarNewsletters() {
           markdownContent,
           descripcion,
           fecha,
-          lista,
-          campaignId: sendyResult.campaignId,
+          lista: listas.join(', '),
         });
 
         const githubSuccess = await commitToGithub(filePath, mdFile, `Newsletter: ${titulo}`);
@@ -547,7 +540,6 @@ async function procesarNewsletters() {
         await updateNotionPage(pageId, {
           status: 'Sent',
           enviarAhora: false,
-          campaignId: sendyResult.campaignId,
           urlBlog,
           fechaEnvio: new Date().toISOString(),
         });

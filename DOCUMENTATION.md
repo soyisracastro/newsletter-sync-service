@@ -146,7 +146,7 @@ export const collections = {
 };
 ```
 
-#### `src/pages/newsletter/index.astro`
+#### `src/pages/archivo.astro`
 ```astro
 ---
 import { getCollection } from 'astro:content';
@@ -191,7 +191,7 @@ const newslettersByYear = sortedNewsletters.reduce((acc, newsletter) => {
                 </time>
                 <h3 class="text-xl font-semibold mt-1">
                   <a 
-                    href={`/newsletter/${newsletter.slug}`}
+                    href={`/${newsletter.slug}`}
                     class="hover:text-blue-600 transition"
                   >
                     {newsletter.data.title}
@@ -208,7 +208,7 @@ const newslettersByYear = sortedNewsletters.reduce((acc, newsletter) => {
 </Layout>
 ```
 
-#### `src/pages/newsletter/[slug].astro`
+#### `src/pages/[slug].astro`
 ```astro
 ---
 import { getCollection } from 'astro:content';
@@ -431,7 +431,7 @@ function createEmailHtml(contenido, slug) {
   
   <div style="margin-top: 30px; padding: 20px; text-align: center; font-size: 14px; color: #666;">
     <p>
-      <a href="${CONFIG.blog.baseUrl}/newsletter/${slug}" style="color: #3b82f6; text-decoration: none;">Ver en navegador</a>
+      <a href="${CONFIG.blog.baseUrl}/${slug}" style="color: #3b82f6; text-decoration: none;">Ver en navegador</a>
       &nbsp;•&nbsp;
       <a href="[unsubscribe]" style="color: #3b82f6; text-decoration: none;">Desuscribirse</a>
     </p>
@@ -688,7 +688,7 @@ async function procesarNewsletters() {
 
         // 5. Actualizar Notion
         console.log('   → Actualizando Notion...');
-        const urlBlog = `${CONFIG.blog.baseUrl}/newsletter/${slug}`;
+        const urlBlog = `${CONFIG.blog.baseUrl}/${slug}`;
         await updateNotionPage(pageId, {
           status: 'Sent',
           enviarAhora: false,
