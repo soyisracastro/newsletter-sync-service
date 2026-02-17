@@ -536,7 +536,7 @@ async function procesarNewsletters() {
 
         // 6. Actualizar Notion
         console.log('   → Actualizando Notion...');
-        const urlBlog = `${CONFIG.blog.baseUrl}/newsletter/${slug}`;
+        const urlBlog = `${CONFIG.blog.baseUrl}/${slug}`;
         await updateNotionPage(pageId, {
           status: 'Sent',
           enviarAhora: false,
