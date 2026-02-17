@@ -288,28 +288,17 @@ function truncateAtWord(text, maxLength) {
 /**
  * Crea el HTML completo del email
  */
-function createEmailHtml(bodyHtml, slug) {
-  return `<!DOCTYPE html>
-<html>
+function createEmailHtml(bodyHtml, titulo) {
+  return `<html>
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Newsletter</title>
+<title>${titulo}</title>
 </head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333; background-color: #f9fafb;">
-  <div style="background-color: white; padding: 30px; border-radius: 8px;">
-    ${bodyHtml}
-  </div>
-  <div style="margin-top: 30px; padding: 20px; text-align: center; font-size: 14px; color: #666;">
-    <p>
-      <a href="${CONFIG.blog.baseUrl}/newsletter/${slug}" style="color: #3b82f6; text-decoration: none;">Ver en navegador</a>
-      &nbsp;&bull;&nbsp;
-      <a href="[unsubscribe]" style="color: #3b82f6; text-decoration: none;">Desuscribirse</a>
-    </p>
-    <p style="margin-top: 10px; font-size: 12px; color: #999;">
-      TodoConta - Contenido diario para contadores
-    </p>
-  </div>
+<body style="max-width: 600px;">
+${bodyHtml}
+
+<p>&nbsp;</p>
+
+<p><span style="font-size:12px;">Si deseas darte de baja, </span><unsubscribe><span style="font-size:12px;">clic aqu&iacute;</span></unsubscribe><span style="font-size:12px;">.</span></p>
 </body>
 </html>`;
 }
@@ -431,7 +420,7 @@ async function updateNotionPage(pageId, updates) {
       properties['Status'] = { select: { name: updates.status } };
     }
     if (updates.hasOwnProperty('enviarAhora')) {
-      properties['📤 Enviar ahora'] = { checkbox: updates.enviarAhora };
+      properties['Enviar ahora'] = { checkbox: updates.enviarAhora };
     }
     if (updates.campaignId) {
       properties['Campaign ID'] = {
@@ -466,8 +455,8 @@ async function procesarNewsletters() {
       database_id: CONFIG.notion.databaseId,
       filter: {
         and: [
-          { property: '✅ Listo para publicar', checkbox: { equals: true } },
-          { property: '📤 Enviar ahora', checkbox: { equals: true } },
+          { property: 'Listo para publicar', checkbox: { equals: true } },
+          { property: 'Enviar ahora', checkbox: { equals: true } },
           // Si ya tiene "Fecha Envío", no se re-envía nunca
           { property: 'Fecha Envío', date: { is_empty: true } },
         ],
@@ -522,7 +511,7 @@ async function procesarNewsletters() {
 
         // 4. Enviar a Sendy PRIMERO (si falla, no queda post huérfano)
         console.log('   → Enviando newsletter vía Sendy...');
-        const emailHtml = createEmailHtml(htmlContent, slug);
+        const emailHtml = createEmailHtml(htmlContent, titulo);
         const sendyResult = await sendToSendy({
           subject: titulo,
           htmlContent: emailHtml,
