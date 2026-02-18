@@ -363,7 +363,7 @@ const CONFIG = {
     replyTo: process.env.SENDY_REPLY_TO || '[email protected]',
   },
   blog: {
-    baseUrl: process.env.BLOG_BASE_URL || 'https://todoconta.com',
+    baseUrl: process.env.BLOG_BASE_URL || 'https://columna13.club',
   }
 };
 
@@ -749,7 +749,7 @@ SENDY_LIST_PRO=xxxxxxxxxxxxxxxxxxxxx
 SENDY_LIST_EMPRESARIOS=xxxxxxxxxxxxxxxxxxxxx
 
 # Blog
-BLOG_BASE_URL=https://todoconta.com
+BLOG_BASE_URL=https://columna13.club
 ```
 
 #### `.github/workflows/sync.yml`

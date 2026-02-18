@@ -27,7 +27,7 @@ const CONFIG = {
     replyTo: process.env.SENDY_REPLY_TO || '[email protected]',
   },
   blog: {
-    baseUrl: process.env.BLOG_BASE_URL || 'https://todoconta.com',
+    baseUrl: process.env.BLOG_BASE_URL || 'https://columna13.club',
   },
 };
 
