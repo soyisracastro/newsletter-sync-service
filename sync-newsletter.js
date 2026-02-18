@@ -309,11 +309,14 @@ ${bodyHtml}
 function createMarkdownFile(data) {
   const { titulo, markdownContent, descripcion, fecha, lista } = data;
 
+  const safeTitulo = titulo.replace(/"/g, "'");
+  const safeDescripcion = descripcion.replace(/"/g, "'");
+
   const frontmatter = [
     '---',
-    `title: "${titulo}"`,
+    `title: "${safeTitulo}"`,
     `pubDate: ${new Date(fecha).toISOString()}`,
-    `description: "${descripcion}"`,
+    `description: "${safeDescripcion}"`,
     `sentToList: "${lista}"`,
     '---',
   ];
