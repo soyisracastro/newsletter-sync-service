@@ -40,7 +40,7 @@ const SENDY_LISTS = {
 // CLIENTES
 // ============================================
 
-const notion = new Client({ auth: CONFIG.notion.token });
+const notion = new Client({ auth: CONFIG.notion.token, timeoutMs: 60_000 });
 const octokit = new Octokit({ auth: CONFIG.github.token });
 
 // ============================================

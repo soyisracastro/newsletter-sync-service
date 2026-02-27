@@ -2,7 +2,8 @@ name: Sync Newsletters
 
 on:
   schedule:
-    - cron: '*/15 * * * *'
+    # 8:00 AM y 8:00 PM hora Ciudad de México (UTC-6)
+    - cron: '0 14,2 * * *'
   workflow_dispatch:
 
 jobs:
