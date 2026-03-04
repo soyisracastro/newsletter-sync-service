@@ -77,10 +77,17 @@ function richTextToMarkdown(richTextArray) {
 function richTextToHtml(richTextArray) {
   if (!richTextArray || !Array.isArray(richTextArray)) return '';
 
-  const NOTION_COLORS = {
-    gray: '#9b9a97', brown: '#64473a', orange: '#d9730d',
-    yellow: '#dfab01', green: '#0f7b6c', blue: '#0b6e99',
-    purple: '#6940a5', pink: '#ad1a72', red: '#e03e3e',
+  // Colores de texto — solo los que realmente se usan
+  const TEXT_COLORS = {
+    red: '#dc2626',
+    gray: '#6b7280',
+  };
+
+  // Colores de fondo — pasteles suaves
+  const BG_COLORS = {
+    yellow: '#ffff99',
+    red: '#fee2e2',
+    gray: '#f3f4f6',
   };
 
   return richTextArray.map(rt => {
@@ -97,10 +104,12 @@ function richTextToHtml(richTextArray) {
     if (color && color !== 'default') {
       if (color.endsWith('_background')) {
         const base = color.replace('_background', '');
-        const bg = NOTION_COLORS[base] || '#ffff00';
-        text = `<span style="background-color: ${bg}; padding: 0 2px;">${text}</span>`;
-      } else if (NOTION_COLORS[color]) {
-        text = `<span style="color: ${NOTION_COLORS[color]};">${text}</span>`;
+        const bg = BG_COLORS[base];
+        if (bg) {
+          text = `<span style="background-color: ${bg}; padding: 0 2px;">${text}</span>`;
+        }
+      } else if (TEXT_COLORS[color]) {
+        text = `<span style="color: ${TEXT_COLORS[color]};">${text}</span>`;
       }
     }
 
@@ -257,7 +266,13 @@ function blocksToHtml(blocks) {
           ? block.image.external.url
           : block.image.file.url;
         const caption = richTextToPlain(block.image.caption);
-        parts.push(`<img src="${url}" alt="${caption}" style="max-width: 100%; height: auto; border-radius: 6px; margin: 16px 0;">`);
+        let imgHtml = `<div style="display: inline-block; background: #fff; padding: 8px 8px 24px 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); margin: 16px 0;">`;
+        imgHtml += `<img src="${url}" alt="${caption}" style="max-width: 100%; height: auto; display: block;">`;
+        if (caption) {
+          imgHtml += `<p style="text-align: center; margin: 8px 0 0; font-size: 13px; color: #6b7280;">${caption}</p>`;
+        }
+        imgHtml += `</div>`;
+        parts.push(imgHtml);
         break;
       }
 
