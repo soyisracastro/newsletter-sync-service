@@ -76,6 +76,13 @@ function richTextToMarkdown(richTextArray) {
  */
 function richTextToHtml(richTextArray) {
   if (!richTextArray || !Array.isArray(richTextArray)) return '';
+
+  const NOTION_COLORS = {
+    gray: '#9b9a97', brown: '#64473a', orange: '#d9730d',
+    yellow: '#dfab01', green: '#0f7b6c', blue: '#0b6e99',
+    purple: '#6940a5', pink: '#ad1a72', red: '#e03e3e',
+  };
+
   return richTextArray.map(rt => {
     let text = rt.plain_text
       .replace(/&/g, '&amp;')
@@ -85,6 +92,18 @@ function richTextToHtml(richTextArray) {
     if (rt.annotations?.italic) text = `<em>${text}</em>`;
     if (rt.annotations?.strikethrough) text = `<s>${text}</s>`;
     if (rt.annotations?.code) text = `<code>${text}</code>`;
+
+    const color = rt.annotations?.color;
+    if (color && color !== 'default') {
+      if (color.endsWith('_background')) {
+        const base = color.replace('_background', '');
+        const bg = NOTION_COLORS[base] || '#ffff00';
+        text = `<span style="background-color: ${bg}; padding: 0 2px;">${text}</span>`;
+      } else if (NOTION_COLORS[color]) {
+        text = `<span style="color: ${NOTION_COLORS[color]};">${text}</span>`;
+      }
+    }
+
     if (rt.href) text = `<a href="${rt.href}" style="color: #3b82f6;">${text}</a>`;
     return text;
   }).join('');
@@ -214,11 +233,11 @@ function blocksToHtml(blocks) {
         break;
 
       case 'bulleted_list_item':
-        parts.push(`<li style="line-height: 1.6; margin-bottom: 4px;">${richTextToHtml(block.bulleted_list_item.rich_text)}</li>`);
+        parts.push(`<li data-list="ul" style="line-height: 1.6; margin-bottom: 4px;">${richTextToHtml(block.bulleted_list_item.rich_text)}</li>`);
         break;
 
       case 'numbered_list_item':
-        parts.push(`<li style="line-height: 1.6; margin-bottom: 4px;">${richTextToHtml(block.numbered_list_item.rich_text)}</li>`);
+        parts.push(`<li data-list="ol" style="line-height: 1.6; margin-bottom: 4px;">${richTextToHtml(block.numbered_list_item.rich_text)}</li>`);
         break;
 
       case 'quote':
@@ -247,10 +266,12 @@ function blocksToHtml(blocks) {
     }
   }
 
-  // Envolver listas en <ul>/<ol>
+  // Envolver listas consecutivas en <ul>/<ol> según su tipo
   let html = parts.join('\n');
-  html = html.replace(/(<li[^>]*>.*?<\/li>\n?)+/g, (match) => {
-    return `<ul style="padding-left: 20px; margin-bottom: 16px;">\n${match}</ul>\n`;
+  html = html.replace(/(<li data-list="(ul|ol)"[^>]*>.*?<\/li>\n?)+/g, (match) => {
+    const tag = match.includes('data-list="ol"') ? 'ol' : 'ul';
+    const clean = match.replace(/ data-list="(ul|ol)"/g, '');
+    return `<${tag} style="padding-left: 20px; margin-bottom: 16px;">\n${clean}</${tag}>\n`;
   });
 
   return html;
@@ -520,34 +541,42 @@ async function procesarNewsletters() {
         }
         console.log('   ✅ Newsletter enviada');
 
-        // 5. Crear archivo .md en GitHub
-        console.log('   → Creando archivo en GitHub...');
-        const filePath = `src/content/newsletters/${slug}.md`;
-        const mdFile = createMarkdownFile({
-          titulo,
-          markdownContent,
-          descripcion,
-          fecha,
-          lista: listas.join(', '),
-        });
+        // 5. Crear archivo .md en GitHub (solo si no es envío exclusivo a Test)
+        const isTestOnly = listas.length === 1 && listas[0] === 'Test';
+        let urlBlog;
 
-        const githubSuccess = await commitToGithub(filePath, mdFile, `Newsletter: ${titulo}`);
-        if (!githubSuccess) {
-          throw new Error('Error al crear archivo en GitHub');
+        if (isTestOnly) {
+          console.log('   ⏭️  Envío solo a Test — se omite publicación en blog');
+        } else {
+          console.log('   → Creando archivo en GitHub...');
+          const filePath = `src/content/newsletters/${slug}.md`;
+          const mdFile = createMarkdownFile({
+            titulo,
+            markdownContent,
+            descripcion,
+            fecha,
+            lista: listas.join(', '),
+          });
+
+          const githubSuccess = await commitToGithub(filePath, mdFile, `Newsletter: ${titulo}`);
+          if (!githubSuccess) {
+            throw new Error('Error al crear archivo en GitHub');
+          }
+          console.log('   ✅ Archivo creado en GitHub');
+          urlBlog = `${CONFIG.blog.baseUrl}/${slug}`;
         }
-        console.log('   ✅ Archivo creado en GitHub');
 
         // 6. Actualizar Notion
         console.log('   → Actualizando Notion...');
-        const urlBlog = `${CONFIG.blog.baseUrl}/${slug}`;
         await updateNotionPage(pageId, {
           status: 'Sent',
           enviarAhora: false,
-          urlBlog,
+          ...(urlBlog && { urlBlog }),
           fechaEnvio: new Date().toISOString(),
         });
         console.log('   ✅ Notion actualizado');
-        console.log(`   🔗 URL: ${urlBlog}\n`);
+        if (urlBlog) console.log(`   🔗 URL: ${urlBlog}`);
+        console.log('');
 
       } catch (error) {
         console.error(`   ❌ Error: ${error.message}\n`);
