@@ -329,7 +329,7 @@ function createEmailHtml(bodyHtml, titulo) {
 <head>
 <title>${titulo}</title>
 </head>
-<body style="max-width: 600px;">
+<body style="max-width: 600px; font-family: Georgia, serif;">
 ${bodyHtml}
 
 <p>&nbsp;</p>
