@@ -32,8 +32,8 @@ const CONFIG = {
 };
 
 const SENDY_LISTS = {
-  'Principal': process.env.SENDY_LIST_PRINCIPAL,
-  'Test': process.env.SENDY_LIST_TEST,
+  Principal: process.env.SENDY_LIST_PRINCIPAL,
+  Test: process.env.SENDY_LIST_TEST,
 };
 
 // ============================================
@@ -52,7 +52,7 @@ const octokit = new Octokit({ auth: CONFIG.github.token });
  */
 function richTextToPlain(richTextArray) {
   if (!richTextArray || !Array.isArray(richTextArray)) return '';
-  return richTextArray.map(rt => rt.plain_text).join('');
+  return richTextArray.map((rt) => rt.plain_text).join('');
 }
 
 /**
@@ -60,15 +60,17 @@ function richTextToPlain(richTextArray) {
  */
 function richTextToMarkdown(richTextArray) {
   if (!richTextArray || !Array.isArray(richTextArray)) return '';
-  return richTextArray.map(rt => {
-    let text = rt.plain_text;
-    if (rt.annotations?.bold) text = `**${text}**`;
-    if (rt.annotations?.italic) text = `*${text}*`;
-    if (rt.annotations?.strikethrough) text = `~~${text}~~`;
-    if (rt.annotations?.code) text = `\`${text}\``;
-    if (rt.href) text = `[${text}](${rt.href})`;
-    return text;
-  }).join('');
+  return richTextArray
+    .map((rt) => {
+      let text = rt.plain_text;
+      if (rt.annotations?.bold) text = `**${text}**`;
+      if (rt.annotations?.italic) text = `*${text}*`;
+      if (rt.annotations?.strikethrough) text = `~~${text}~~`;
+      if (rt.annotations?.code) text = `\`${text}\``;
+      if (rt.href) text = `[${text}](${rt.href})`;
+      return text;
+    })
+    .join('');
 }
 
 /**
@@ -90,32 +92,35 @@ function richTextToHtml(richTextArray) {
     gray: '#f3f4f6',
   };
 
-  return richTextArray.map(rt => {
-    let text = rt.plain_text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-    if (rt.annotations?.bold) text = `<strong>${text}</strong>`;
-    if (rt.annotations?.italic) text = `<em>${text}</em>`;
-    if (rt.annotations?.strikethrough) text = `<s>${text}</s>`;
-    if (rt.annotations?.code) text = `<code>${text}</code>`;
+  return richTextArray
+    .map((rt) => {
+      let text = rt.plain_text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      if (rt.annotations?.bold) text = `<strong>${text}</strong>`;
+      if (rt.annotations?.italic) text = `<em>${text}</em>`;
+      if (rt.annotations?.strikethrough) text = `<s>${text}</s>`;
+      if (rt.annotations?.code) text = `<code>${text}</code>`;
 
-    const color = rt.annotations?.color;
-    if (color && color !== 'default') {
-      if (color.endsWith('_background')) {
-        const base = color.replace('_background', '');
-        const bg = BG_COLORS[base];
-        if (bg) {
-          text = `<span style="background-color: ${bg}; padding: 0 2px;">${text}</span>`;
+      const color = rt.annotations?.color;
+      if (color && color !== 'default') {
+        if (color.endsWith('_background')) {
+          const base = color.replace('_background', '');
+          const bg = BG_COLORS[base];
+          if (bg) {
+            text = `<span style="background-color: ${bg}; padding: 0 2px;">${text}</span>`;
+          }
+        } else if (TEXT_COLORS[color]) {
+          text = `<span style="color: ${TEXT_COLORS[color]};">${text}</span>`;
         }
-      } else if (TEXT_COLORS[color]) {
-        text = `<span style="color: ${TEXT_COLORS[color]};">${text}</span>`;
       }
-    }
 
-    if (rt.href) text = `<a href="${rt.href}" style="color: #3b82f6;">${text}</a>`;
-    return text;
-  }).join('');
+      if (rt.href)
+        text = `<a href="${rt.href}" style="color: #3b82f6;">${text}</a>`;
+      return text;
+    })
+    .join('');
 }
 
 /**
@@ -167,11 +172,15 @@ function blocksToMarkdown(blocks) {
         break;
 
       case 'bulleted_list_item':
-        lines.push(`- ${richTextToMarkdown(block.bulleted_list_item.rich_text)}`);
+        lines.push(
+          `- ${richTextToMarkdown(block.bulleted_list_item.rich_text)}`,
+        );
         break;
 
       case 'numbered_list_item':
-        lines.push(`1. ${richTextToMarkdown(block.numbered_list_item.rich_text)}`);
+        lines.push(
+          `1. ${richTextToMarkdown(block.numbered_list_item.rich_text)}`,
+        );
         break;
 
       case 'quote':
@@ -195,9 +204,10 @@ function blocksToMarkdown(blocks) {
         break;
 
       case 'image': {
-        const url = block.image.type === 'external'
-          ? block.image.external.url
-          : block.image.file.url;
+        const url =
+          block.image.type === 'external'
+            ? block.image.external.url
+            : block.image.file.url;
         const caption = richTextToPlain(block.image.caption);
         lines.push(`![${caption}](${url})`);
         lines.push('');
@@ -224,47 +234,66 @@ function blocksToHtml(blocks) {
       case 'paragraph': {
         const text = richTextToHtml(block.paragraph.rich_text);
         if (text) {
-          parts.push(`<p style="line-height: 1.6; margin-bottom: 16px;">${text}</p>`);
+          parts.push(
+            `<p style="line-height: 1.6; margin-bottom: 16px;">${text}</p>`,
+          );
         }
         break;
       }
 
       case 'heading_1':
-        parts.push(`<h2 style="font-size: 24px; font-weight: bold; margin: 24px 0 12px;">${richTextToHtml(block.heading_1.rich_text)}</h2>`);
+        parts.push(
+          `<h2 style="font-size: 24px; font-weight: bold; margin: 24px 0 12px;">${richTextToHtml(block.heading_1.rich_text)}</h2>`,
+        );
         break;
 
       case 'heading_2':
-        parts.push(`<h3 style="font-size: 20px; font-weight: bold; margin: 20px 0 10px;">${richTextToHtml(block.heading_2.rich_text)}</h3>`);
+        parts.push(
+          `<h3 style="font-size: 20px; font-weight: bold; margin: 20px 0 10px;">${richTextToHtml(block.heading_2.rich_text)}</h3>`,
+        );
         break;
 
       case 'heading_3':
-        parts.push(`<h4 style="font-size: 18px; font-weight: bold; margin: 16px 0 8px;">${richTextToHtml(block.heading_3.rich_text)}</h4>`);
+        parts.push(
+          `<h4 style="font-size: 18px; font-weight: bold; margin: 16px 0 8px;">${richTextToHtml(block.heading_3.rich_text)}</h4>`,
+        );
         break;
 
       case 'bulleted_list_item':
-        parts.push(`<li data-list="ul" style="line-height: 1.6; margin-bottom: 4px;">${richTextToHtml(block.bulleted_list_item.rich_text)}</li>`);
+        parts.push(
+          `<li data-list="ul" style="line-height: 1.6; margin-bottom: 4px;">${richTextToHtml(block.bulleted_list_item.rich_text)}</li>`,
+        );
         break;
 
       case 'numbered_list_item':
-        parts.push(`<li data-list="ol" style="line-height: 1.6; margin-bottom: 4px;">${richTextToHtml(block.numbered_list_item.rich_text)}</li>`);
+        parts.push(
+          `<li data-list="ol" style="line-height: 1.6; margin-bottom: 4px;">${richTextToHtml(block.numbered_list_item.rich_text)}</li>`,
+        );
         break;
 
       case 'quote':
-        parts.push(`<blockquote style="border-left: 3px solid #3b82f6; padding-left: 16px; margin: 16px 0; color: #555;">${richTextToHtml(block.quote.rich_text)}</blockquote>`);
+        parts.push(
+          `<blockquote style="border-left: 3px solid #3b82f6; padding-left: 16px; margin: 16px 0; color: #555;">${richTextToHtml(block.quote.rich_text)}</blockquote>`,
+        );
         break;
 
       case 'divider':
-        parts.push('<hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">');
+        parts.push(
+          '<hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">',
+        );
         break;
 
       case 'callout':
-        parts.push(`<div style="background: #f3f4f6; border-radius: 6px; padding: 16px; margin: 16px 0;">${richTextToHtml(block.callout.rich_text)}</div>`);
+        parts.push(
+          `<div style="background: #f3f4f6; border-radius: 6px; padding: 16px; margin: 16px 0;">${richTextToHtml(block.callout.rich_text)}</div>`,
+        );
         break;
 
       case 'image': {
-        const url = block.image.type === 'external'
-          ? block.image.external.url
-          : block.image.file.url;
+        const url =
+          block.image.type === 'external'
+            ? block.image.external.url
+            : block.image.file.url;
         const caption = richTextToPlain(block.image.caption);
         let imgHtml = `<div style="display: inline-block; background: #fff; padding: 8px 8px 24px 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); margin: 16px 0;">`;
         imgHtml += `<img src="${url}" alt="${caption}" style="max-width: 100%; height: auto; display: block;">`;
@@ -283,11 +312,14 @@ function blocksToHtml(blocks) {
 
   // Envolver listas consecutivas en <ul>/<ol> según su tipo
   let html = parts.join('\n');
-  html = html.replace(/(<li data-list="(ul|ol)"[^>]*>.*?<\/li>\n?)+/g, (match) => {
-    const tag = match.includes('data-list="ol"') ? 'ol' : 'ul';
-    const clean = match.replace(/ data-list="(ul|ol)"/g, '');
-    return `<${tag} style="padding-left: 20px; margin-bottom: 16px;">\n${clean}</${tag}>\n`;
-  });
+  html = html.replace(
+    /(<li data-list="(ul|ol)"[^>]*>.*?<\/li>\n?)+/g,
+    (match) => {
+      const tag = match.includes('data-list="ol"') ? 'ol' : 'ul';
+      const clean = match.replace(/ data-list="(ul|ol)"/g, '');
+      return `<${tag} style="padding-left: 20px; margin-bottom: 16px;">\n${clean}</${tag}>\n`;
+    },
+  );
 
   return html;
 }
@@ -318,7 +350,9 @@ function truncateAtWord(text, maxLength) {
   if (text.length <= maxLength) return text;
   const truncated = text.substring(0, maxLength);
   const lastSpace = truncated.lastIndexOf(' ');
-  return (lastSpace > 0 ? truncated.substring(0, lastSpace) : truncated) + '...';
+  return (
+    (lastSpace > 0 ? truncated.substring(0, lastSpace) : truncated) + '...'
+  );
 }
 
 /**
@@ -329,7 +363,7 @@ function createEmailHtml(bodyHtml, titulo) {
 <head>
 <title>${titulo}</title>
 </head>
-<body style="max-width: 600px; font-family: Georgia, serif;">
+<body style="max-width: 600px;">
 ${bodyHtml}
 
 <p>&nbsp;</p>
@@ -422,11 +456,14 @@ async function sendToSendy(data) {
   });
 
   try {
-    const response = await fetch(`${CONFIG.sendy.apiUrl}/api/campaigns/create.php`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: formData,
-    });
+    const response = await fetch(
+      `${CONFIG.sendy.apiUrl}/api/campaigns/create.php`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData,
+      },
+    );
 
     const result = await response.text();
 
@@ -497,7 +534,9 @@ async function procesarNewsletters() {
       return;
     }
 
-    console.log(`📝 Encontradas ${response.results.length} newsletter(s) para procesar\n`);
+    console.log(
+      `📝 Encontradas ${response.results.length} newsletter(s) para procesar\n`,
+    );
 
     // 2. Procesar cada newsletter
     for (const page of response.results) {
@@ -507,7 +546,9 @@ async function procesarNewsletters() {
         // Extraer propiedades
         const props = page.properties;
         const titulo = props['Título']?.title?.[0]?.plain_text || 'Sin título';
-        const listas = props['Lista Sendy']?.multi_select?.map(s => s.name) || ['Principal'];
+        const listas = props['Lista Sendy']?.multi_select?.map(
+          (s) => s.name,
+        ) || ['Principal'];
         const fecha = new Date().toISOString();
 
         // Validar listas
@@ -517,7 +558,7 @@ async function procesarNewsletters() {
           }
         }
 
-        const listaIds = listas.map(l => SENDY_LISTS[l]).join(',');
+        const listaIds = listas.map((l) => SENDY_LISTS[l]).join(',');
 
         console.log(`📄 Procesando: "${titulo}"`);
         console.log(`   Listas: ${listas.join(', ')}`);
@@ -537,8 +578,8 @@ async function procesarNewsletters() {
         const slug = generateSlug(titulo, fecha);
         const plainText = richTextToPlain(
           blocks
-            .filter(b => b.type === 'paragraph')
-            .flatMap(b => b.paragraph.rich_text)
+            .filter((b) => b.type === 'paragraph')
+            .flatMap((b) => b.paragraph.rich_text),
         );
         const descripcion = truncateAtWord(plainText, 160);
 
@@ -561,7 +602,9 @@ async function procesarNewsletters() {
         let urlBlog;
 
         if (isTestOnly) {
-          console.log('   ⏭️  Envío solo a Test — se omite publicación en blog');
+          console.log(
+            '   ⏭️  Envío solo a Test — se omite publicación en blog',
+          );
         } else {
           console.log('   → Creando archivo en GitHub...');
           const filePath = `src/content/newsletters/${slug}.md`;
@@ -573,7 +616,11 @@ async function procesarNewsletters() {
             lista: listas.join(', '),
           });
 
-          const githubSuccess = await commitToGithub(filePath, mdFile, `Newsletter: ${titulo}`);
+          const githubSuccess = await commitToGithub(
+            filePath,
+            mdFile,
+            `Newsletter: ${titulo}`,
+          );
           if (!githubSuccess) {
             throw new Error('Error al crear archivo en GitHub');
           }
@@ -592,7 +639,6 @@ async function procesarNewsletters() {
         console.log('   ✅ Notion actualizado');
         if (urlBlog) console.log(`   🔗 URL: ${urlBlog}`);
         console.log('');
-
       } catch (error) {
         console.error(`   ❌ Error: ${error.message}\n`);
         await updateNotionPage(pageId, {
@@ -603,7 +649,6 @@ async function procesarNewsletters() {
     }
 
     console.log('✅ Sincronización completada\n');
-
   } catch (error) {
     console.error('❌ Error general:', error.message);
     process.exit(1);
